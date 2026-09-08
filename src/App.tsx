@@ -170,7 +170,8 @@ export default function App() {
             className="underline hover:text-slate-400"
           >
             GitHub
-          </a>
+          </a>{' '}
+          — created by <a href="https://github.com/mrayhanfadil" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-400">@mrayhanfadil</a>
         </footer>
       </div>
     </div>

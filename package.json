@@ -1,0 +1,27 @@
+{
+  "name": "substack-saver",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "*",
+    "lucide-react": "*",
+    "react": "*",
+    "react-dom": "*"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "*",
+    "@types/node": "*",
+    "@types/react": "*",
+    "@types/react-dom": "*",
+    "@vitejs/plugin-react": "*",
+    "tailwindcss": "*",
+    "typescript": "*",
+    "vite": "*"
+  }
+}

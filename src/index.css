@@ -4,12 +4,24 @@
   color-scheme: dark;
 }
 
+html {
+  /* stop iOS inflating type in landscape */
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   background-color: #020617;
   color: #f1f5f9;
   font-family:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Mobile browsers otherwise flash a grey box over every tap */
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
 }
 
 .font-terminal {
@@ -33,4 +45,10 @@ body {
 .scroll-thin::-webkit-scrollbar-thumb {
   background: #1e293b;
   border-radius: 3px;
+}
+
+/* Keep content clear of the iOS home indicator / Android gesture bar.
+   Defined outside Tailwind's layers so it always wins. */
+.pb-safe {
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
 }

@@ -1,10 +1,10 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   getErrorMessage,
   isValidUrl,
   type ConvertFormat,
 } from '../lib/api'
-import { triggerDownload } from '../lib/download'
+import { downloadDestination, triggerDownload } from '../lib/download'
 
 export interface HistoryEntry {
   id: string
@@ -16,6 +16,20 @@ export interface HistoryEntry {
 
 const STORAGE_KEY = 'substack-saver-history'
 const MAX_HISTORY = 20
+
+/**
+ * A form POST hands the download to the browser and never reports back, so
+ * hold the busy state for a beat: long enough to be visible, short enough to
+ * stay out of the way. It also blocks accidental double-taps on mobile.
+ */
+const DOWNLOAD_FEEDBACK_MS = 1500
+
+/** Display name for the file the server is about to send. */
+function filenameFor(target: string, format: ConvertFormat): string {
+  const slug = target.replace(/https?:\/\//, '').replace(/[^a-z0-9]+/gi, '-').slice(0, 30)
+  const ext = format === 'markdown' ? 'md' : format
+  return `${slug}-${format}.${ext}`
+}
 
 function isEntry(v: unknown): v is HistoryEntry {
   if (typeof v !== 'object' || v === null) return false
@@ -50,6 +64,16 @@ export function useConverter() {
   const [notice, setNotice] = useState<string | null>(null)
   const [history, setHistory] = useState<HistoryEntry[]>(loadHistory)
 
+  const convertingTimer = useRef<number | null>(null)
+  const downloadingTimer = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (convertingTimer.current !== null) window.clearTimeout(convertingTimer.current)
+      if (downloadingTimer.current !== null) window.clearTimeout(downloadingTimer.current)
+    }
+  }, [])
+
   const pushHistory = useCallback((entry: HistoryEntry) => {
     setHistory((prev) => {
       const next = [entry, ...prev.filter((h) => h.url !== entry.url || h.format !== entry.format)].slice(
@@ -75,37 +99,45 @@ export function useConverter() {
       setError('That URL does not look valid. It should look like https://example.substack.com/p/some-post')
       return
     }
+
     setConverting(true)
     setError(null)
     setNotice(null)
     try {
-      const slug = target.replace(/https?:\/\//, '').replace(/[^a-z0-9]+/gi, '-').slice(0, 30)
-      const filename = `${slug}-${format}.${format === 'markdown' ? 'md' : format}`
-      triggerDownload(target, format, filename)
+      const filename = filenameFor(target, format)
+      triggerDownload(target, format)
       pushHistory({ id: `${Date.now()}`, url: target, format, filename, timestamp: Date.now() })
-      setNotice(`Downloading ${filename}...`)
+      setNotice(`Downloading ${filename} — saves to ${downloadDestination()}.`)
     } catch (e) {
       setError(getErrorMessage(e))
-    } finally {
-      setConverting(false)
     }
+
+    if (convertingTimer.current !== null) window.clearTimeout(convertingTimer.current)
+    convertingTimer.current = window.setTimeout(() => {
+      convertingTimer.current = null
+      setConverting(false)
+    }, DOWNLOAD_FEEDBACK_MS)
   }, [url, format, pushHistory])
 
   const downloadPost = useCallback(
-    async (postUrl: string) => {
+    (postUrl: string) => {
       setDownloadingUrl(postUrl)
       setError(null)
+      setNotice(null)
       try {
-        const slug = postUrl.replace(/https?:\/\//, '').replace(/[^a-z0-9]+/gi, '-').slice(0, 30)
-        const filename = `${slug}-${format}.${format === 'markdown' ? 'md' : format}`
-        triggerDownload(postUrl, format, filename)
+        const filename = filenameFor(postUrl, format)
+        triggerDownload(postUrl, format)
         pushHistory({ id: `${Date.now()}`, url: postUrl, format, filename, timestamp: Date.now() })
-        setNotice(`Downloading ${filename}...`)
+        setNotice(`Downloading ${filename} — saves to ${downloadDestination()}.`)
       } catch (e) {
         setError(getErrorMessage(e))
-      } finally {
-        setDownloadingUrl(null)
       }
+
+      if (downloadingTimer.current !== null) window.clearTimeout(downloadingTimer.current)
+      downloadingTimer.current = window.setTimeout(() => {
+        downloadingTimer.current = null
+        setDownloadingUrl(null)
+      }, DOWNLOAD_FEEDBACK_MS)
     },
     [format, pushHistory],
   )

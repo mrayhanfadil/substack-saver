@@ -9,11 +9,13 @@ import hashlib
 import re
 import time
 from collections import defaultdict
+from html import escape
 from pathlib import Path
+from urllib.parse import parse_qs
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -161,55 +163,139 @@ async def convert(req: ConvertRequest, request: Request):
     )
 
 
-class DownloadRequest(BaseModel):
-    url: str
-    format: str  # pdf | epub | markdown
+URLENCODED = "application/x-www-form-urlencoded"
+
+
+def _content_type(request: Request) -> str:
+    return request.headers.get("content-type", "").split(";")[0].strip().lower()
+
+
+def _is_browser_form(request: Request) -> bool:
+    """True when a plain browser form POST (the iOS-safe path) sent this."""
+    return _content_type(request) == URLENCODED
+
+
+def _error_page(status: int, message: str) -> str:
+    """Minimal dark error page so a failed browser download has a way back."""
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Download failed — Substack Saver</title>
+<style>
+  :root {{ color-scheme: dark; }}
+  body {{ margin: 0; min-height: 100vh; display: flex; align-items: center;
+         justify-content: center; background: #020617; color: #f1f5f9;
+         padding: 24px; padding-bottom: max(24px, env(safe-area-inset-bottom));
+         font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }}
+  .card {{ width: 100%; max-width: 30rem; border: 1px solid #1e293b;
+          border-radius: 12px; background: #0f172a; padding: 24px; }}
+  .badge {{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+           font-size: 20px; font-weight: 700; color: #f59e0b; letter-spacing: -0.02em; }}
+  h1 {{ font-size: 16px; margin: 16px 0 8px; }}
+  p {{ font-size: 14px; line-height: 1.6; color: #94a3b8; margin: 0 0 20px;
+      overflow-wrap: anywhere; }}
+  a {{ display: flex; align-items: center; justify-content: center; min-height: 44px;
+      width: 100%; border-radius: 8px; background: #f59e0b; color: #020617;
+      text-decoration: none; font-weight: 700; font-size: 14px;
+      letter-spacing: 0.06em; text-transform: uppercase; }}
+</style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">SUBSTACK_SAVER</span>
+    <h1>Download failed ({status})</h1>
+    <p>{escape(message)}</p>
+    <a href="/">Back to Substack Saver</a>
+  </div>
+</body>
+</html>"""
+
+
+def _download_error(request: Request, status: int, message: str):
+    """HTML for browser form POSTs (they navigate), JSON for API clients."""
+    if _is_browser_form(request):
+        return HTMLResponse(_error_page(status, message), status_code=status)
+    return JSONResponse({"detail": message}, status_code=status)
+
+
+async def _read_download_body(request: Request) -> tuple[str, str]:
+    """Read (url, format) from a form-encoded or JSON body.
+
+    The urlencoded body is parsed with the stdlib rather than `request.form()`
+    so the image needs no `python-multipart` dependency for what is, in
+    practice, one form POST from the frontend.
+    """
+    if _is_browser_form(request):
+        raw = (await request.body()).decode("utf-8", errors="replace")
+        data: object = {k: v[0] for k, v in parse_qs(raw, keep_blank_values=True).items()}
+    else:
+        try:
+            data = await request.json()
+        except Exception as exc:
+            raise HTTPException(
+                status_code=400,
+                detail="Send a JSON or form-encoded body with 'url' and 'format'.",
+            ) from exc
+
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=400, detail="Body must be an object with 'url' and 'format'.")
+
+    url = str(data.get("url") or "").strip()
+    fmt = str(data.get("format") or "").strip().lower()
+    if not url:
+        raise HTTPException(status_code=400, detail="Missing 'url'.")
+    if fmt not in ("pdf", "epub", "markdown"):
+        raise HTTPException(status_code=400, detail=f"Invalid format: {fmt or '(missing)'}")
+    return url, fmt
 
 
 @app.post("/api/download")
-async def download(req: DownloadRequest, request: Request):
-    """Return the actual file bytes for download."""
-    _check_rate(request.client.host if request.client else "unknown")
+async def download(request: Request):
+    """Return the file bytes with `Content-Disposition: attachment`.
 
-    fmt = req.format.lower()
-    if fmt not in ("pdf", "epub", "markdown"):
-        raise HTTPException(status_code=400, detail=f"Invalid format: {fmt}")
-
+    Accepts JSON *and* form-encoded bodies. iOS Safari cannot save blob URLs or
+    honour `a[download]`, so the frontend posts a hidden <form> straight here.
+    A browser form POST navigates on failure, hence the HTML error page.
+    """
     try:
-        post = await fetch_post(req.url)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except LookupError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except RuntimeError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+        url, fmt = await _read_download_body(request)
+        _check_rate(request.client.host if request.client else "unknown")
+        post = await fetch_post(url)
 
-    try:
         if fmt == "markdown":
-            content = to_markdown(post)
-            ext = "md"
-            media = "text/markdown; charset=utf-8"
-            body = content.encode("utf-8")
+            body = to_markdown(post).encode("utf-8")
+            ext, media = "md", "text/markdown; charset=utf-8"
         elif fmt == "pdf":
             body = await to_pdf_bytes(post)
-            ext = "pdf"
-            media = "application/pdf"
+            ext, media = "pdf", "application/pdf"
         else:
             body = await to_epub_bytes(post)
-            ext = "epub"
-            media = "application/epub+zip"
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Conversion failed: {e}")
+            ext, media = "epub", "application/epub+zip"
+    except HTTPException as exc:
+        # Rate limits and validation errors: keep native JSON semantics for API
+        # clients, but give browsers a page they can recover from.
+        if _is_browser_form(request):
+            return _download_error(request, exc.status_code, str(exc.detail))
+        raise
+    except ValueError as exc:
+        return _download_error(request, 400, str(exc))
+    except LookupError as exc:
+        return _download_error(request, 404, str(exc))
+    except RuntimeError as exc:
+        return _download_error(request, 502, str(exc))
+    except Exception as exc:
+        return _download_error(request, 500, f"Conversion failed: {exc}")
 
-    filename = _safe_filename(post.title, req.url, ext)
-
-    from fastapi.responses import Response
+    filename = _safe_filename(post.title, url, ext)
 
     return Response(
         content=body,
         media_type=media,
         headers={
             "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store",
         },
     )
 

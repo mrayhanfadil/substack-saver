@@ -26,14 +26,16 @@ export default function FormatSelector({ value, onChange, disabled }: FormatSele
             disabled={disabled}
             onClick={() => onChange(opt.id)}
             aria-pressed={active}
-            className={`flex items-center justify-center gap-2 rounded-lg border py-2.5 font-terminal text-xs font-bold tracking-wider transition-colors disabled:opacity-60 ${
+            /* stacked on phones so three labels still fit a 320px screen,
+               side-by-side from sm up */
+            className={`flex min-h-11 flex-col items-center justify-center gap-1 rounded-lg border px-1 py-2 font-terminal text-[11px] font-bold tracking-wider transition-colors active:scale-[0.98] disabled:opacity-60 sm:min-h-0 sm:flex-row sm:gap-2 sm:px-2 sm:py-2.5 sm:text-xs ${
               active
                 ? 'border-amber-500 bg-amber-500/20 text-amber-400'
                 : 'border-slate-800 bg-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
             }`}
           >
-            <Icon className="h-4 w-4" />
-            {opt.label}
+            <Icon className="h-4 w-4 shrink-0" />
+            <span className="truncate">{opt.label}</span>
           </button>
         )
       })}

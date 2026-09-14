@@ -85,12 +85,12 @@ export default function App() {
   }, [url])
 
   return (
-    <div className="min-h-screen bg-slate-950 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-2xl">
+    <div className="pb-safe min-h-screen bg-slate-950 px-3 pt-6 sm:px-6 sm:pt-8 lg:px-8">
+      <div className="mx-auto w-full max-w-2xl">
         <Header online={online} />
 
         {/* Main card */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
+        <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
           <UrlInput value={url} onChange={setUrl} onSubmit={convertCurrent} disabled={converting} />
 
           <div className="mt-4">
@@ -104,7 +104,7 @@ export default function App() {
           {/* Messages */}
           {(error || notice) && (
             <div
-              className={`mt-4 rounded-lg border px-4 py-3 text-sm ${
+              className={`mt-4 rounded-lg border px-4 py-3 text-sm break-words ${
                 error
                   ? 'border-red-500/30 bg-red-500/10 text-red-400'
                   : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'

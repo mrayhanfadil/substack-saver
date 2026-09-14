@@ -21,17 +21,17 @@ export default function Header({ online }: HeaderProps) {
     online === null ? 'checking backend…' : online ? 'backend online' : 'backend offline'
 
   return (
-    <header className="mb-8 text-center sm:mb-10">
-      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-amber-500">
-        <ArrowDownToLine className="h-6 w-6 text-slate-950" strokeWidth={2.5} />
+    <header className="mb-6 text-center sm:mb-10">
+      <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-amber-500 sm:mb-4 sm:h-12 sm:w-12">
+        <ArrowDownToLine className="h-5 w-5 text-slate-950 sm:h-6 sm:w-6" strokeWidth={2.5} />
       </div>
-      <h1 className="font-terminal text-2xl font-bold tracking-tight text-slate-100 sm:text-3xl">
+      <h1 className="font-terminal text-xl font-bold tracking-tight text-slate-100 sm:text-3xl">
         SUBSTACK<span className="text-amber-400">_</span>SAVER
       </h1>
-      <p className="mt-2 text-sm text-slate-400 sm:text-base">
+      <p className="mx-auto mt-2 max-w-xs text-sm text-slate-400 sm:max-w-none sm:text-base">
         Save Substack posts as PDF, EPUB, or Markdown
       </p>
-      <div className="mt-3 inline-flex items-center gap-3">
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
         <div className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-3 py-1">
           <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
           <span className="font-terminal text-[11px] uppercase tracking-wider text-slate-400">

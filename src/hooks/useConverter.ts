@@ -1,12 +1,10 @@
 import { useCallback, useState } from 'react'
 import {
-  convertPost,
-  downloadBlob,
-  filenameFromUrl,
   getErrorMessage,
   isValidUrl,
   type ConvertFormat,
 } from '../lib/api'
+import { triggerDownload } from '../lib/download'
 
 export interface HistoryEntry {
   id: string
@@ -81,11 +79,11 @@ export function useConverter() {
     setError(null)
     setNotice(null)
     try {
-      const blob = await convertPost(target, format)
-      const filename = filenameFromUrl(target, format)
-      downloadBlob(blob, filename)
+      const slug = target.replace(/https?:\/\//, '').replace(/[^a-z0-9]+/gi, '-').slice(0, 30)
+      const filename = `${slug}-${format}.${format === 'markdown' ? 'md' : format}`
+      triggerDownload(target, format, filename)
       pushHistory({ id: `${Date.now()}`, url: target, format, filename, timestamp: Date.now() })
-      setNotice(`Saved ${filename}`)
+      setNotice(`Downloading ${filename}...`)
     } catch (e) {
       setError(getErrorMessage(e))
     } finally {
@@ -98,11 +96,11 @@ export function useConverter() {
       setDownloadingUrl(postUrl)
       setError(null)
       try {
-        const blob = await convertPost(postUrl, format)
-        const filename = filenameFromUrl(postUrl, format)
-        downloadBlob(blob, filename)
+        const slug = postUrl.replace(/https?:\/\//, '').replace(/[^a-z0-9]+/gi, '-').slice(0, 30)
+        const filename = `${slug}-${format}.${format === 'markdown' ? 'md' : format}`
+        triggerDownload(postUrl, format, filename)
         pushHistory({ id: `${Date.now()}`, url: postUrl, format, filename, timestamp: Date.now() })
-        setNotice(`Saved ${filename}`)
+        setNotice(`Downloading ${filename}...`)
       } catch (e) {
         setError(getErrorMessage(e))
       } finally {

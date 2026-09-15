@@ -175,6 +175,19 @@ def _is_browser_form(request: Request) -> bool:
     return _content_type(request) == URLENCODED
 
 
+def _is_ios(user_agent: str) -> bool:
+    """True when the request comes from iOS / iPadOS Safari.
+
+    Those browsers preview `application/pdf` inline (replacing the page)
+    even with `Content-Disposition: attachment`, so PDFs must be served as
+    `application/octet-stream` to get the same download prompt EPUB gets.
+    iPadOS desktop-mode reports `Macintosh`, which we cannot tell apart
+    server-side — that case keeps the old behaviour.
+    """
+    ua = user_agent.lower()
+    return "iphone" in ua or "ipad" in ua or "ipod" in ua
+
+
 def _error_page(status: int, message: str) -> str:
     """Minimal dark error page so a failed browser download has a way back."""
     return f"""<!doctype html>
@@ -269,7 +282,14 @@ async def download(request: Request):
             ext, media = "md", "text/markdown; charset=utf-8"
         elif fmt == "pdf":
             body = await to_pdf_bytes(post)
-            ext, media = "pdf", "application/pdf"
+            ext = "pdf"
+            # iOS Safari previews application/pdf inline even with
+            # `Content-Disposition: attachment` (page replaced, nothing
+            # saved). octet-stream forces the same download prompt EPUB gets.
+            if _is_ios(request.headers.get("user-agent", "")):
+                media = "application/octet-stream"
+            else:
+                media = "application/pdf"
         else:
             body = await to_epub_bytes(post)
             ext, media = "epub", "application/epub+zip"

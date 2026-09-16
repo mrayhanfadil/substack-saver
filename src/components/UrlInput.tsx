@@ -10,7 +10,10 @@ interface UrlInputProps {
 export default function UrlInput({ value, onChange, onSubmit, disabled }: UrlInputProps) {
   return (
     <div className="relative">
-      <Link2 className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 sm:left-4" />
+      <Link2
+        className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--color-pencil-soft)]"
+        strokeWidth={1.5}
+      />
       <input
         type="url"
         inputMode="url"
@@ -23,20 +26,21 @@ export default function UrlInput({ value, onChange, onSubmit, disabled }: UrlInp
         onKeyDown={(e) => {
           if (e.key === 'Enter') onSubmit()
         }}
-        placeholder="Paste a Substack post or publication URL…"
+        placeholder="https://example.substack.com/p/post-slug"
         spellCheck={false}
         autoComplete="off"
-        /* text-base on phones: anything under 16px makes iOS Safari zoom on focus */
-        className="w-full rounded-lg border border-slate-800 bg-slate-900 py-3.5 pl-10 pr-14 font-terminal text-base text-slate-100 placeholder:text-slate-600 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-60 sm:pl-11 sm:pr-12 sm:text-sm"
+        /* monospace earns its keep on a URL — alignment helps the user verify
+           what they pasted. 16px on phones prevents iOS Safari zoom on focus. */
+        className="w-full rounded-md border border-[color:var(--color-rule)] bg-[color:var(--color-paper)] py-3.5 pl-11 pr-12 font-mono text-base text-[color:var(--color-ink)] placeholder:font-sans placeholder:text-[color:var(--color-pencil-soft)] focus:border-[color:var(--color-ink)] focus:outline-none disabled:opacity-60 sm:text-sm"
       />
       {value && (
         <button
           type="button"
           onClick={() => onChange('')}
           aria-label="Clear URL"
-          className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-300 sm:right-2 sm:h-8 sm:w-8"
+          className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-md text-[color:var(--color-pencil-soft)] transition-colors hover:bg-[color:var(--color-paper-soft)] hover:text-[color:var(--color-ink)] sm:right-2 sm:h-8 sm:w-8"
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4" strokeWidth={1.5} />
         </button>
       )}
     </div>

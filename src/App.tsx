@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ArrowDownToLine, BookOpen, X } from 'lucide-react'
 import Header from './components/Header'
 import UrlInput from './components/UrlInput'
 import FormatSelector from './components/FormatSelector'
@@ -72,57 +73,81 @@ export default function App() {
       .then((res) => {
         if (cancelled) return
         setPosts(res.posts || [])
-        setPubName(((res as unknown as Record<string, unknown>).name as string) || sub)
+        setPubName(
+          ((res as unknown as Record<string, unknown>).name as string) || sub
+        )
         setLoadingPub(false)
       })
       .catch((err) => {
         if (cancelled) return
-        setPubError(err?.response?.data?.detail || 'Could not load publication posts')
+        setPubError(
+          err?.response?.data?.detail || 'Could not load this publication.'
+        )
         setLoadingPub(false)
       })
 
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [url])
 
   return (
-    <div className="pb-safe min-h-screen bg-slate-950 px-3 pt-6 sm:px-6 sm:pt-8 lg:px-8">
+    <div className="pb-safe min-h-screen bg-[color:var(--color-paper)] px-5 pt-8 sm:px-8 sm:pt-12 lg:px-10">
       <div className="mx-auto w-full max-w-2xl">
         <Header online={online} />
 
-        {/* Main card */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
-          <UrlInput value={url} onChange={setUrl} onSubmit={convertCurrent} disabled={converting} />
+        {/* Lead-in: one line of editorial copy, not a hero paragraph */}
+        <p className="mb-8 font-display text-base leading-snug text-[color:var(--color-pencil)] sm:text-lg">
+          Paste a Substack link. Choose a format. Save it for later.
+        </p>
 
-          <div className="mt-4">
-            <FormatSelector value={format} onChange={setFormat} disabled={converting} />
+        {/* Compose card — the input IS the hero */}
+        <section className="rounded-lg border border-[color:var(--color-rule)] bg-[color:var(--color-paper-soft)] p-4 sm:p-6">
+          <UrlInput
+            value={url}
+            onChange={setUrl}
+            onSubmit={convertCurrent}
+            disabled={converting}
+          />
+
+          <div className="mt-5">
+            <FormatSelector
+              value={format}
+              onChange={setFormat}
+              disabled={converting}
+            />
           </div>
 
-          <div className="mt-4">
+          <div className="mt-5">
             <ConvertButton onClick={convertCurrent} loading={converting} />
           </div>
 
-          {/* Messages */}
+          {/* Messages — calmer editorial treatment, not terminal banners */}
           {(error || notice) && (
             <div
-              className={`mt-4 rounded-lg border px-4 py-3 text-sm break-words ${
+              role={error ? 'alert' : 'status'}
+              className={`mt-5 flex items-start gap-3 rounded-md border px-4 py-3 text-sm ${
                 error
-                  ? 'border-red-500/30 bg-red-500/10 text-red-400'
-                  : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                  ? 'border-red-300/60 bg-red-50/60 text-red-800'
+                  : 'border-[color:var(--color-rule)] bg-[color:var(--color-paper)] text-[color:var(--color-ink)]'
               }`}
             >
-              {error || notice}
+              <div className="min-w-0 flex-1 break-words">{error || notice}</div>
               <button
                 onClick={dismissMessages}
-                className="ml-2 underline opacity-60 hover:opacity-100"
+                aria-label="Dismiss message"
+                className="-m-1 shrink-0 rounded p-1 text-current opacity-60 transition-opacity hover:opacity-100"
               >
-                dismiss
+                <X className="h-3.5 w-3.5" strokeWidth={1.5} />
               </button>
             </div>
           )}
+        </section>
 
-          {/* Publication post list */}
-          {posts.length > 0 && (
-            <div className="mt-6 border-t border-slate-800 pt-5">
+        {/* Publication browse — table-of-contents feel */}
+        {(posts.length > 0 || loadingPub || pubError) && (
+          <section className="mt-8">
+            {posts.length > 0 && (
               <PostList
                 posts={posts}
                 pubName={pubName}
@@ -130,48 +155,80 @@ export default function App() {
                 downloadingUrl={downloadingUrl}
                 onDownload={downloadPost}
               />
-            </div>
-          )}
+            )}
 
-          {loadingPub && (
-            <div className="mt-6 border-t border-slate-800 pt-5 text-center text-sm text-slate-500">
-              Loading publication posts…
-            </div>
-          )}
+            {loadingPub && (
+              <div className="flex items-center gap-3 border-t border-[color:var(--color-rule)] pt-6 text-sm text-[color:var(--color-pencil-soft)]">
+                <BookOpen
+                  className="h-4 w-4 animate-pulse"
+                  strokeWidth={1.5}
+                />
+                <span className="font-display">
+                  Loading posts from {pubName || 'this publication'}…
+                </span>
+              </div>
+            )}
 
-          {pubError && (
-            <div className="mt-6 border-t border-slate-800 pt-5 text-center text-sm text-slate-500">
-              {pubError}
-            </div>
-          )}
-        </div>
+            {pubError && (
+              <div className="border-t border-[color:var(--color-rule)] pt-6">
+                <div className="font-display text-sm text-[color:var(--color-pencil)]">
+                  {pubError}
+                </div>
+                <div className="mt-1 text-xs text-[color:var(--color-pencil-soft)]">
+                  Try a publication URL like{' '}
+                  <code className="font-mono text-[color:var(--color-ink)]">
+                    https://newsletter.substack.com
+                  </code>
+                  .
+                </div>
+              </div>
+            )}
+          </section>
+        )}
 
-        {/* History */}
+        {/* Recently saved — the only "history" the page earns */}
         {history.length > 0 && (
-          <div className="mt-6">
-            <DownloadHistory
-              entries={history}
-              onRevisit={(entry) => {
-                setUrl(entry.url)
-                setFormat(entry.format)
-              }}
-              onClear={clearHistory}
-            />
-          </div>
+          <DownloadHistory
+            entries={history}
+            onRevisit={(entry) => {
+              setUrl(entry.url)
+              setFormat(entry.format)
+            }}
+            onClear={clearHistory}
+          />
         )}
 
         {/* Footer */}
-        <footer className="mt-8 text-center text-xs text-slate-600">
-          Free &amp; Open Source —{' '}
-          <a
-            href="https://github.com/mrayhanfadil/substack-saver"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-slate-400"
-          >
-            GitHub
-          </a>{' '}
-          — created by <a href="https://github.com/mrayhanfadil" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-400">@mrayhanfadil</a>
+        <footer className="mt-16 flex flex-col gap-3 border-t border-[color:var(--color-rule)] pt-6 text-xs text-[color:var(--color-pencil-soft)] sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <ArrowDownToLine
+              className="h-3.5 w-3.5"
+              strokeWidth={1.5}
+              aria-hidden="true"
+            />
+            <span>
+              Free & open source —{' '}
+              <a
+                href="https://github.com/mrayhanfadil/substack-saver"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[color:var(--color-ink)] underline decoration-[color:var(--color-rule)] underline-offset-4 transition-colors hover:decoration-[color:var(--color-ink)]"
+              >
+                mrayhanfadil/substack-saver
+              </a>
+            </span>
+          </div>
+          <div className="text-[color:var(--color-pencil-soft)]">
+            by{' '}
+            <a
+              href="https://github.com/mrayhanfadil"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[color:var(--color-ink)] underline decoration-[color:var(--color-rule)] underline-offset-4 transition-colors hover:decoration-[color:var(--color-ink)]"
+            >
+              @mrayhanfadil
+            </a>
+          </div>
         </footer>
       </div>
     </div>

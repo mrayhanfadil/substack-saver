@@ -2,7 +2,7 @@
 
 Save Substack posts as PDF, EPUB, or Markdown. Paste any Substack URL, pick a format, download.
 
-![Screenshot](https://substack.server-fadil.my.id/og-image.png)
+![Screenshot](https://substack.server-fadil.my.id/og-image.png?v=2)
 
 ## Features
 

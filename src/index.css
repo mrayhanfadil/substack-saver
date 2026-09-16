@@ -1,54 +1,123 @@
 @import "tailwindcss";
 
+/* ───────────────────────────────────────────────────────────────────────
+   Direction contract (revamp/calm-editorial)
+
+   THESIS: A reading-tool for newsletter readers, not a CLI. The Bloomberg
+   terminal framing fought the audience — Substack readers are writers and
+   curious readers, not traders. Save a post like putting a book on a
+   shelf, not running a command.
+
+   OWN-WORLD: Warm paper ground (#F8F5EF) with a slight cool cast
+   (Newsreader specimen, not cafe menu); Plus Jakarta Sans for body,
+   Newsreader for display wordmark + section heads (upright roman, no
+   italics — refusing the italic-serif rut); one forest/ink accent
+   (#2D4A3E) for actions and rules; 1px borders, generous line-height.
+   Monospace only where it earns its keep (URL input). No terminal chrome.
+
+   STORY: Paste a URL → pick a format → the surface confirms the save
+   quietly. Publication browse reads like a table of contents, not a
+   command output.
+
+   FIRST VIEWPORT: Wordmark + thin nav top-left (GitHub, status dot).
+   Single input centered, format pills inline-below. "Recently saved"
+   small block at bottom. No hero copy paragraph — the input IS the hero.
+
+   FORM: Calm editorial, sektoral-id family.
+
+   FINISH: unreviewed and undocumented is unfinished; this build ends
+   with the finish review, the verdict, and every shipping raster
+   carrying its provenance.
+   ─────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  /* Paper + ink palette — stepping off the cream+terracotta AI rut */
+  --color-paper: #f8f5ef;
+  --color-paper-soft: #f1ece2;
+  --color-paper-deep: #ebe5d6;
+  --color-ink: #2d4a3e;       /* forest/ink — primary action + rules */
+  --color-ink-soft: #4a6557;
+  --color-ink-mute: #8a9c91;
+  --color-pencil: #6b6356;     /* body text, slightly warm dark */
+  --color-pencil-soft: #9a9285;
+  --color-rule: #d9d2c1;       /* 1px borders, dividers */
+  --color-rule-soft: #e7e1d2;
+
+  --font-display: "Newsreader", ui-serif, Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+}
+
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html {
-  /* stop iOS inflating type in landscape */
   -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background-color: #020617;
-  color: #f1f5f9;
-  font-family:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--color-paper);
+  color: var(--color-pencil);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  /* Newsreader specimen-page feel: a touch of leading, not so tight it reads
+     like an admin dashboard. */
+  line-height: 1.55;
 }
 
-/* Mobile browsers otherwise flash a grey box over every tap */
+/* Display face for wordmark and section heads. Upright roman — refusing
+   the italic-serif rut. */
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-variation-settings: "opsz" 32;
+}
+
+.font-terminal {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum", "ss01";
+}
+
 button,
 a {
   -webkit-tap-highlight-color: transparent;
 }
 
-.font-terminal {
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-}
-
 ::selection {
-  background: rgba(245, 158, 11, 0.35);
-  color: #fffbeb;
+  background: rgba(45, 74, 62, 0.18);
+  color: var(--color-ink);
 }
 
 .scroll-thin::-webkit-scrollbar {
   width: 6px;
 }
-
 .scroll-thin::-webkit-scrollbar-track {
   background: transparent;
 }
-
 .scroll-thin::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: var(--color-rule);
   border-radius: 3px;
 }
+.scroll-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--color-pencil-soft);
+}
 
-/* Keep content clear of the iOS home indicator / Android gesture bar.
-   Defined outside Tailwind's layers so it always wins. */
 .pb-safe {
   padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+}
+
+/* Editorial rule — used to separate sections without heavy borders */
+.rule {
+  border-color: var(--color-rule);
+}
+
+/* Focus ring — paper-world friendly, no neon */
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+  border-radius: 2px;
 }

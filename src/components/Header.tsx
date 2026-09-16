@@ -2,53 +2,64 @@ import { ArrowDownToLine } from 'lucide-react'
 
 const GITHUB_URL = 'https://github.com/mrayhanfadil/substack-saver'
 
-function GithubIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-    </svg>
-  )
-}
-
 interface HeaderProps {
   online: boolean | null
 }
 
 export default function Header({ online }: HeaderProps) {
   const dot =
-    online === null ? 'bg-slate-600' : online ? 'bg-emerald-400' : 'bg-red-400'
+    online === null
+      ? 'bg-[color:var(--color-pencil-soft)]'
+      : online
+        ? 'bg-[color:var(--color-ink)]'
+        : 'bg-red-400/70'
   const label =
-    online === null ? 'checking backend…' : online ? 'backend online' : 'backend offline'
+    online === null
+      ? 'checking'
+      : online
+        ? 'online'
+        : 'offline'
 
   return (
-    <header className="mb-6 text-center sm:mb-10">
-      <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-amber-500 sm:mb-4 sm:h-12 sm:w-12">
-        <ArrowDownToLine className="h-5 w-5 text-slate-950 sm:h-6 sm:w-6" strokeWidth={2.5} />
-      </div>
-      <h1 className="font-terminal text-xl font-bold tracking-tight text-slate-100 sm:text-3xl">
-        SUBSTACK<span className="text-amber-400">_</span>SAVER
-      </h1>
-      <p className="mx-auto mt-2 max-w-xs text-sm text-slate-400 sm:max-w-none sm:text-base">
-        Save Substack posts as PDF, EPUB, or Markdown
-      </p>
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-        <div className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-3 py-1">
+    <header className="mb-10 flex items-start justify-between sm:mb-14">
+      {/* Wordmark — Newsreader upright roman, no italics (refusing the AI rut) */}
+      <a
+        href={GITHUB_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group inline-flex items-baseline gap-2"
+        title="View on GitHub"
+      >
+        <ArrowDownToLine
+          className="h-4 w-4 -translate-y-0.5 text-[color:var(--color-ink)]"
+          strokeWidth={1.75}
+        />
+        <span className="font-display text-[1.6rem] font-medium leading-none tracking-tight text-[color:var(--color-ink)] sm:text-[1.85rem]">
+          Substack
+        </span>
+        <span className="font-display text-[1.6rem] font-medium leading-none tracking-tight text-[color:var(--color-pencil-soft)] sm:text-[1.85rem]">
+          Saver
+        </span>
+      </a>
+
+      {/* Right: status + GitHub icon link */}
+      <nav className="flex items-center gap-3 pt-1">
+        <div
+          className="inline-flex items-center gap-1.5 text-xs text-[color:var(--color-pencil-soft)]"
+          aria-live="polite"
+        >
           <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-          <span className="font-terminal text-[11px] uppercase tracking-wider text-slate-400">
-            {label}
-          </span>
+          <span>{label}</span>
         </div>
         <a
           href={GITHUB_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-slate-400 transition-colors hover:border-slate-700 hover:text-slate-200"
-          title="View on GitHub"
+          className="text-xs text-[color:var(--color-pencil-soft)] underline decoration-[color:var(--color-rule)] underline-offset-4 transition-colors hover:text-[color:var(--color-ink)] hover:decoration-[color:var(--color-ink)]"
         >
-          <GithubIcon className="h-3 w-3" />
-          <span className="font-terminal text-[11px] uppercase tracking-wider">Source</span>
+          GitHub
         </a>
-      </div>
+      </nav>
     </header>
   )
 }

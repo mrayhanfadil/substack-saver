@@ -12,17 +12,17 @@ export default function ConvertButton({ onClick, loading, disabled }: ConvertBut
       type="button"
       onClick={onClick}
       disabled={disabled || loading}
-      className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-amber-500 py-3.5 font-terminal text-sm font-bold tracking-wider text-slate-950 transition-colors hover:bg-amber-400 active:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
+      className="flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-[color:var(--color-ink)] py-3.5 text-sm font-semibold text-[color:var(--color-paper)] transition-colors hover:bg-[color:var(--color-ink-soft)] active:bg-[color:var(--color-ink-soft)] disabled:cursor-not-allowed disabled:opacity-50"
     >
       {loading ? (
         <>
-          <Loader2 className="h-4 w-4 animate-spin" />
-          CONVERTING…
+          <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} />
+          <span>Converting…</span>
         </>
       ) : (
         <>
-          <Download className="h-4 w-4" strokeWidth={2.5} />
-          CONVERT
+          <Download className="h-4 w-4" strokeWidth={1.75} />
+          <span>Save post</span>
         </>
       )}
     </button>

@@ -9,18 +9,27 @@ interface PostListProps {
   onDownload: (url: string) => void
 }
 
-export default function PostList({ posts, pubName, format, downloadingUrl, onDownload }: PostListProps) {
+export default function PostList({
+  posts,
+  pubName,
+  format,
+  downloadingUrl,
+  onDownload,
+}: PostListProps) {
   return (
-    <div>
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="truncate font-terminal text-xs font-bold uppercase tracking-wider text-slate-300">
-          {pubName}
-        </h2>
-        <span className="shrink-0 text-xs text-slate-500">{posts.length} posts</span>
+    <section>
+      <div className="mb-4 flex items-baseline justify-between gap-3 border-b border-[color:var(--color-rule)] pb-3">
+        <div className="min-w-0">
+          <div className="font-display text-base font-medium leading-tight text-[color:var(--color-ink)]">
+            {pubName}
+          </div>
+          <div className="mt-0.5 text-xs text-[color:var(--color-pencil-soft)]">
+            {posts.length} {posts.length === 1 ? 'post' : 'posts'}
+          </div>
+        </div>
       </div>
-      {/* phones: let the list flow with the page — a nested scroll box slices the
-          last row and fights the page scroll. Cap it only from sm up. */}
-      <div className="scroll-thin space-y-1 sm:max-h-80 sm:overflow-y-auto sm:pr-1">
+
+      <ol className="scroll-thin space-y-0 sm:max-h-96 sm:overflow-y-auto sm:pr-1">
         {posts.map((post, i) => {
           const isLoading = downloadingUrl === post.url
           const dateStr = post.date
@@ -31,28 +40,28 @@ export default function PostList({ posts, pubName, format, downloadingUrl, onDow
               })
             : ''
           return (
-            <div
+            <li
               key={`${post.url}-${i}`}
-              className="group flex items-start gap-2 rounded-lg border border-transparent px-2 py-2.5 transition-colors hover:border-slate-800 hover:bg-slate-800/50 sm:gap-3 sm:px-3"
+              className="group flex items-start gap-3 border-b border-[color:var(--color-rule-soft)] py-3 last:border-b-0"
             >
               <div className="min-w-0 flex-1">
-                <div className="flex items-start gap-1.5">
-                  <a
-                    href={post.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="line-clamp-2 min-w-0 flex-1 text-sm font-medium text-slate-200 hover:text-amber-400"
-                  >
-                    {post.title}
-                  </a>
-                  {/* touch devices have no hover — always show the hint there */}
-                  <ExternalLink className="mt-0.5 h-3 w-3 shrink-0 text-slate-600 opacity-60 transition-opacity group-hover:opacity-100 sm:opacity-0" />
-                </div>
-                <div className="mt-0.5 flex items-center gap-2 overflow-hidden text-xs text-slate-500">
-                  {dateStr && <span className="shrink-0">{dateStr}</span>}
+                <a
+                  href={post.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="line-clamp-2 font-display text-[15px] font-medium leading-snug text-[color:var(--color-ink)] transition-colors hover:underline hover:decoration-[color:var(--color-ink)] hover:underline-offset-4"
+                >
+                  {post.title}
+                  <ExternalLink
+                    className="ml-1 inline h-3 w-3 align-baseline text-[color:var(--color-pencil-soft)] opacity-60 transition-opacity group-hover:opacity-100 sm:opacity-0"
+                    strokeWidth={1.5}
+                  />
+                </a>
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[color:var(--color-pencil-soft)]">
+                  {dateStr && <span>{dateStr}</span>}
                   {post.author && (
                     <>
-                      <span className="shrink-0 text-slate-700">·</span>
+                      <span aria-hidden="true">·</span>
                       <span className="truncate">{post.author}</span>
                     </>
                   )}
@@ -62,19 +71,19 @@ export default function PostList({ posts, pubName, format, downloadingUrl, onDow
                 type="button"
                 onClick={() => onDownload(post.url)}
                 disabled={isLoading}
-                className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-md border border-slate-700 bg-slate-800 px-3 py-2 font-terminal text-[10px] font-bold uppercase tracking-wider text-slate-300 transition-colors hover:border-amber-500 hover:text-amber-400 active:border-amber-500 active:text-amber-400 disabled:opacity-50 sm:min-h-0 sm:px-2.5 sm:py-1.5"
+                className="inline-flex min-h-11 shrink-0 items-center gap-1.5 self-center rounded-md border border-[color:var(--color-rule)] bg-transparent px-3 py-1.5 text-xs font-medium text-[color:var(--color-ink)] transition-colors hover:border-[color:var(--color-ink)] hover:bg-[color:var(--color-paper-soft)] disabled:opacity-50 sm:min-h-0"
               >
                 {isLoading ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.5} />
                 ) : (
-                  <Download className="h-3 w-3" />
+                  <Download className="h-3.5 w-3.5" strokeWidth={1.5} />
                 )}
-                {format.toUpperCase()}
+                <span className="uppercase tracking-wider">{format}</span>
               </button>
-            </div>
+            </li>
           )
         })}
-      </div>
-    </div>
+      </ol>
+    </section>
   )
 }
